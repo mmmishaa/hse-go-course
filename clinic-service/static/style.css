@@ -1,0 +1,26 @@
+body { font-family: system-ui, -apple-system, sans-serif; background: #f4f6f8; margin: 0; padding: 20px; }
+.container { max-width: 600px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+h1, h2, h3 { text-align: center; color: #2c3e50; margin-bottom: 16px; }
+form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+input, button { padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+input:focus { outline: none; border-color: #3b82f6; }
+button { background: #3b82f6; color: #fff; cursor: pointer; border: none; font-weight: 500; }
+button:hover { background: #2563eb; }
+#logout-btn { background: #ef4444; }
+ul { list-style: none; padding: 0; }
+li { background: #f8fafc; padding: 12px; margin: 8px 0; border-radius: 6px; border-left: 4px solid #94a3b8; }
+.status-pending { border-color: #f59e0b; }
+.status-processing { border-color: #3b82f6; }
+.status-completed { border-color: #10b981; }
+p { text-align: center; min-height: 20px; font-size: 14px; color: #64748b; 
+
+
+}
+select { padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; background: white; }
+label { font-weight: 500; margin-top: 8px; color: #374151; }
+.message.error { color: #dc2626; background: #fee2e2; padding: 10px; border-radius: 6px; }
+.message.success { color: #16a34a; background: #d1fae5; padding: 10px; border-radius: 6px; }
+.message.error { color: #dc2626; background: #fee2e2; padding: 10px; border-radius: 6px; }
+.message.success { color: #16a34a; background: #d1fae5; padding: 10px; border-radius: 6px; }
+label { font-weight: 500; margin-top: 8px; color: #374151; }
+select { padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; background: white; margin-bottom: 10px; }

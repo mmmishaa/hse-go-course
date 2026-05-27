@@ -1,0 +1,142 @@
+
+
+services:
+  app:
+    build: .
+    container_name: clinic-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8080
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DBNAME: clinic
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      RABBIT_HOST: rabbitmq
+      RABBIT_PORT: 5672
+      RABBIT_USER: guest
+      RABBIT_PASSWORD: guest
+      RABBIT_VHOST: "/"
+      JWT_SECRET: clinic-secret-key-change-in-prod
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - clinic-network
+    volumes:
+      - ./static:/app/static:ro
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: clinic-postgres
+    environment:
+      POSTGRES_DB: clinic
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deployment/db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d clinic"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - clinic-network
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: clinic-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./deployment/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - clinic-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: clinic-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - clinic-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: clinic-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./misc/grafana:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - clinic-network
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: clinic-worker
+    environment:
+      RABBIT_HOST: rabbitmq
+      RABBIT_PORT: 5672
+      RABBIT_USER: guest
+      RABBIT_PASSWORD: guest
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DBNAME: clinic
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - clinic-network
+
+  loadgen:
+    build:
+      context: .
+      dockerfile: Dockerfile.loadgen
+    container_name: clinic-loadgen
+    depends_on:
+      - app
+    restart: "no"
+    networks:
+      - clinic-network
+
+volumes:
+  postgres_data:
+  grafana_data:
+
+networks:
+  clinic-network:
+    driver: bridge

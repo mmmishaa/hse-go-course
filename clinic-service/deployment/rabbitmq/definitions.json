@@ -1,0 +1,15 @@
+{
+    "rabbit_version": "3.13",
+    "vhosts": [{"name": "/"}],
+    "queues": [
+      {"name": "appointments.new", "vhost": "/", "durable": true},
+      {"name": "appointments.status", "vhost": "/", "durable": true}
+    ],
+    "exchanges": [
+      {"name": "", "vhost": "/", "type": "direct", "durable": true}
+    ],
+    "bindings": [
+      {"source": "", "vhost": "/", "destination": "appointments.new", "destination_type": "queue", "routing_key": "appointments.new"},
+      {"source": "", "vhost": "/", "destination": "appointments.status", "destination_type": "queue", "routing_key": "appointments.status"}
+    ]
+  }
