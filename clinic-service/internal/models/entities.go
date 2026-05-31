@@ -13,12 +13,14 @@ type User struct {
 }
 
 type Appointment struct {
-	ID        string    `db:"id" json:"id"`
-	UserID    string    `db:"user_id" json:"user_id"`
-	Doctor    string    `db:"doctor" json:"doctor"`
-	Date      time.Time `db:"date" json:"date"`
-	Status    string    `db:"status" json:"status"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	ID               string    `db:"id" json:"id"`
+	UserID           string    `db:"user_id" json:"user_id"`
+	Doctor           string    `db:"doctor" json:"doctor"`
+	DoctorSpeciality string    `db:"doctor_speciality" json:"doctor_speciality"`
+	DoctorOffice     string    `db:"doctor_office" json:"doctor_office"`
+	Date             time.Time `db:"date" json:"date"`
+	Status           string    `db:"status" json:"status"`
+	CreatedAt        time.Time `db:"created_at" json:"created_at"`
 }
 
 type Doctor struct {

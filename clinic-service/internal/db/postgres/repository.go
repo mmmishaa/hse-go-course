@@ -69,6 +69,8 @@ func NewPostgresDB(cfg *config.PostgresConfig) (*sqlx.DB, error) {
 		id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 		user_id UUID REFERENCES users(id) ON DELETE CASCADE,
 		doctor VARCHAR(255) NOT NULL,
+		doctor_speciality VARCHAR(100) DEFAULT '',
+		doctor_office VARCHAR(10) DEFAULT '',
 		date TIMESTAMP NOT NULL,
 		status VARCHAR(20) DEFAULT 'pending',
 		created_at TIMESTAMP DEFAULT NOW()
@@ -121,14 +123,16 @@ func (r *Repository) RegisterUser(ctx context.Context, firstName, lastName, phon
 }
 
 func (r *Repository) CreateAppointment(ctx context.Context, app *models.Appointment) error {
-	query := `INSERT INTO appointments(user_id, doctor, date) VALUES($1, $2, $3) RETURNING id, created_at`
-	return r.db.QueryRowxContext(ctx, query, app.UserID, app.Doctor, app.Date).
+	query := `INSERT INTO appointments(user_id, doctor, doctor_speciality, doctor_office, date) 
+			  VALUES($1, $2, $3, $4, $5) RETURNING id, created_at`
+	return r.db.QueryRowxContext(ctx, query, app.UserID, app.Doctor, app.DoctorSpeciality, app.DoctorOffice, app.Date).
 		Scan(&app.ID, &app.CreatedAt)
 }
 
 func (r *Repository) GetAppointmentsByUser(ctx context.Context, userID string) ([]models.Appointment, error) {
 	var apps []models.Appointment
-	query := `SELECT id, user_id, doctor, date, status, created_at FROM appointments WHERE user_id = $1 ORDER BY date DESC`
+	query := `SELECT id, user_id, doctor, doctor_speciality, doctor_office, date, status, created_at 
+			  FROM appointments WHERE user_id = $1 ORDER BY date DESC`
 	err := r.db.SelectContext(ctx, &apps, query, userID)
 	return apps, err
 }
@@ -141,7 +145,7 @@ func (r *Repository) UpdateAppointmentStatus(ctx context.Context, id, status str
 
 func (r *Repository) GetAppointmentByID(ctx context.Context, id string) (*models.Appointment, error) {
 	app := &models.Appointment{}
-	query := `SELECT id, user_id, doctor, date, status, created_at FROM appointments WHERE id = $1`
+	query := `SELECT id, user_id, doctor, doctor_speciality, doctor_office, date, status, created_at FROM appointments WHERE id = $1`
 	err := r.db.GetContext(ctx, app, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -180,7 +184,7 @@ func (r *Repository) GetAllDoctors(ctx context.Context) ([]models.Doctor, error)
 
 func (r *Repository) GetAvailableSlots(ctx context.Context, doctorName string, date time.Time) ([]time.Time, error) {
 	var doc models.Doctor
-	if err := r.db.GetContext(ctx, &doc, `SELECT id, name, speciality, office, lunch_start, lunch_end FROM doctors WHERE name = $1`, doctorName); err != nil {
+	if err := r.db.GetContext(ctx, &doc, `SELECT id, lunch_start, lunch_end FROM doctors WHERE name = $1`, doctorName); err != nil {
 		return nil, fmt.Errorf("doctor not found: %w", err)
 	}
 

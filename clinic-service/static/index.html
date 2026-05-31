@@ -8,39 +8,45 @@
 </head>
 <body>
     <div class="container">
-        <h1>🏥 Электронная система записи в поликлинику</h1>
+        <header>
+            <h1>Электронная система записи в поликлинику</h1>
+        </header>
         
-        <div id="auth-section">
-            <h2>Регистрация</h2>
-            <form id="register-form">
-                <input type="text" id="reg-fname" placeholder="Имя" required>
-                <input type="text" id="reg-lname" placeholder="Фамилия" required>
-                <input type="tel" id="reg-phone" placeholder="Телефон (+7...)" required>
-                <input type="email" id="reg-email" placeholder="Email" required>
-                <input type="password" id="reg-pass" placeholder="Пароль" required>
-                <button type="submit">Зарегистрироваться</button>
-            </form>
-            <hr style="margin: 16px 0; border: 0; border-top: 1px solid #e5e7eb;">
-            <h2>Вход</h2>
-            <form id="login-form">
-                <input type="email" id="login-email" placeholder="Email" required>
-                <input type="password" id="login-pass" placeholder="Пароль" required>
-                <button type="submit">Войти</button>
-            </form>
+        <section id="auth-section">
+            <div class="auth-block">
+                <h2>Регистрация</h2>
+                <form id="register-form">
+                    <input type="text" id="reg-fname" placeholder="Имя" required>
+                    <input type="text" id="reg-lname" placeholder="Фамилия" required>
+                    <input type="tel" id="reg-phone" placeholder="Телефон" required>
+                    <input type="email" id="reg-email" placeholder="Email" required>
+                    <input type="password" id="reg-pass" placeholder="Пароль" required>
+                    <button type="submit">Зарегистрироваться</button>
+                </form>
+            </div>
+            <div class="auth-divider"></div>
+            <div class="auth-block">
+                <h2>Вход</h2>
+                <form id="login-form">
+                    <input type="email" id="login-email" placeholder="Email" required>
+                    <input type="password" id="login-pass" placeholder="Пароль" required>
+                    <button type="submit">Войти</button>
+                </form>
+            </div>
             <p id="auth-msg" class="message"></p>
-        </div>
+        </section>
         
-        <div id="app-section" style="display:none;">
-            <div id="user-info" style="margin-bottom: 12px; font-size: 14px; color: #64748b;"></div>
+        <section id="app-section" style="display:none;">
+            <div id="user-info"></div>
             <h2>Запись на прием</h2>
             <form id="apt-form">
-                <label>Выберите врача:</label>
+                <label for="apt-doctor">Врач</label>
                 <select id="apt-doctor" required></select>
                 
-                <label>Дата приема:</label>
+                <label for="apt-date">Дата приема</label>
                 <input type="date" id="apt-date" required>
                 
-                <label>Свободное время:</label>
+                <label for="apt-time">Свободное время</label>
                 <select id="apt-time" required></select>
                 
                 <button type="submit">Записаться</button>
@@ -48,11 +54,11 @@
             <p id="apt-msg" class="message"></p>
             
             <h3>Мои записи</h3>
-            <button id="refresh-btn">🔄 Обновить список</button>
+            <button id="refresh-btn" class="secondary">Обновить список</button>
             <ul id="apt-list"></ul>
             
-            <button id="logout-btn" class="secondary">Выйти</button>
-        </div>
+            <button id="logout-btn" class="danger">Выйти</button>
+        </section>
     </div>
     <script src="/static/app.js"></script>
 </body>

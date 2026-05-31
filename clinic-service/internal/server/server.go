@@ -26,29 +26,45 @@ type Server struct {
 func NewServer(cfg *config.Config, db *sqlx.DB, rabbit *rabbitmq.Client, log *slog.Logger) *Server {
 	repo := postgres.NewRepository(db)
 
+	// Создаём конкретные реализации сервисов
+	authService := service.NewAuthService(repo, cfg.JWTSecret)
+	appointmentService := service.NewAppointmentService(repo, rabbit, log)
+	healthService := service.NewHealthService(repo)
+
+	// Передаём их в Handler как ИНТЕРФЕЙСЫ
+	// Go автоматически приводит типы, так как реализации удовлетворяют интерфейсам
 	h := &Handler{
-		authSvc: service.NewAuthService(repo, cfg.JWTSecret),
-		appSvc:  service.NewAppointmentService(repo, rabbit, log),
-		repo:    repo,
-		log:     log,
+		authSvc:   authService,       // AuthService → AuthServiceInterface
+		appSvc:    appointmentService, // AppointmentService → AppointmentServiceInterface
+		healthSvc: healthService,     // HealthService → HealthServiceInterface
+		repo:      repo,
+		log:       log,
 	}
 
 	mux := http.NewServeMux()
 
+	// Статика и фронтенд
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	mux.HandleFunc("/", h.ServeIndex)
+
+	// Публичные эндпоинты
 	mux.HandleFunc("/test", h.Test)
+	mux.HandleFunc("/health", h.HealthCheck)
 	mux.HandleFunc("/dbtest", h.DBTest)
 	mux.HandleFunc("/auth/register", h.Register)
 	mux.HandleFunc("/auth/login", h.Login)
 	mux.HandleFunc("/doctors", h.GetDoctors)
 	mux.HandleFunc("/slots", h.GetAvailableSlots)
 
+	// Защищенные эндпоинты с JWT middleware
 	authMW := middleware.AuthMiddleware(cfg.JWTSecret)
 	mux.Handle("/appointments/create", authMW(http.HandlerFunc(h.CreateAppointment)))
 	mux.Handle("/appointments/list", authMW(http.HandlerFunc(h.ListAppointments)))
 
+	// Метрики Prometheus
 	mux.Handle("/metrics", promhttp.Handler())
+
+	// Оборачиваем в middleware для сбора метрик
 	wrapped := utils.PrometheusMiddleware(mux)
 
 	return &Server{
@@ -58,8 +74,8 @@ func NewServer(cfg *config.Config, db *sqlx.DB, rabbit *rabbitmq.Client, log *sl
 		httpSrv: &http.Server{
 			Addr:         ":" + cfg.Server.Port,
 			Handler:      wrapped,
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
+			ReadTimeout:  15 * time.Second,
+			WriteTimeout: 15 * time.Second,
 			IdleTimeout:  60 * time.Second,
 		},
 	}
